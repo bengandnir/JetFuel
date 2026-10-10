@@ -1,0 +1,54 @@
+services:
+  splunk-enterprise:
+    image: splunk/splunk:latest
+    container_name: splunk-enterprise
+    environment:
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_GENERAL_TERMS: "--accept-sgt-current-at-splunk-com"
+      SPLUNK_PASSWORD: "${SPLUNK_PASSWORD:-ChangeMe123!}"
+      # The Splunk docker image enables HEC (port 8088, HTTPS) and creates a
+      # token with this value on first start.
+      SPLUNK_HEC_TOKEN: "${SPLUNK_HEC_TOKEN:-11111111-2222-3333-4444-555555555555}"
+    ports:
+      - "8000:8000"   # Splunk Web (dashboards)
+      - "8088:8088"   # HEC (exposed for debugging; worker uses the internal network)
+    volumes:
+      - splunk-var:/opt/splunk/var
+      - splunk-etc:/opt/splunk/etc
+    healthcheck:
+      test: ["CMD-SHELL", "curl -ksf https://localhost:8088/services/collector/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+    restart: unless-stopped
+
+  python-worker:
+    build: .
+    container_name: python-worker
+    depends_on:
+      splunk-enterprise:
+        condition: service_healthy
+    environment:
+      SPLUNK_HEC_URL: "https://splunk-enterprise:8088/services/collector/event"
+      SPLUNK_HEC_TOKEN: "${SPLUNK_HEC_TOKEN:-11111111-2222-3333-4444-555555555555}"
+      SPLUNK_INDEX: "${SPLUNK_INDEX:-main}"
+      SPLUNK_HEC_VERIFY_SSL: "false"   # Splunk uses a self-signed cert by default
+      COLLECTION_INTERVAL_MINUTES: "${COLLECTION_INTERVAL_MINUTES:-5}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      # Collectors only start when their URL is set:
+      WAZE_API_URL: "${WAZE_API_URL:-}"
+      FUEL_APP_API_URL: "${FUEL_APP_API_URL:-}"
+      FUEL_APP_DEVICE_ID: "${FUEL_APP_DEVICE_ID:-}"
+      FUEL_APP_AUTH_TOKEN: "${FUEL_APP_AUTH_TOKEN:-}"
+      GOV_DATA_URL: "${GOV_DATA_URL:-}"
+    volumes:
+      - worker-spool:/app/spool   # failed-HEC-batch backlog survives restarts
+    restart: unless-stopped
+
+volumes:
+  splunk-var:
+  splunk-etc:
+  worker-spool:
+
+

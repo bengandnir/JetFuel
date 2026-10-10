@@ -1,0 +1,21 @@
+[project]
+name = "best-fuel-finder"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Ben Gadnir", email = "bengadnir@gmail.com" }
+]
+requires-python = ">=3.15"
+dependencies = [
+    "requests>=2.34.2",
+    "schedule>=1.2.2",
+    "urllib3>=2.8.0",
+]
+
+[project.scripts]
+best-fuel-finder = "best_fuel_finder:main"
+
+[build-system]
+requires = ["uv_build>=0.13.0,<0.14.0"]
+build-backend = "uv_build"
