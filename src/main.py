@@ -11,12 +11,11 @@ from typing import Any, Dict, List, Optional
 
 import schedule
 
-from collectors import (
-    BaseCollector,
-    FuelAppAPICollector,
-    GovDataScraper,
-    WazeCollector,
-)
+from collectors.fuelappAPIcollector import FuelAppAPICollector
+from collectors.govcollector import GovCollector
+from collectors.wazecollector import WazeCollector
+
+
 from models import FuelStationData
 from processing import DataNormalizer
 from splunk_client import SplunkHECClient
@@ -89,7 +88,7 @@ class MainController:
         if cols["fuel_app"]["api_url"]:
             self._collectors.append(FuelAppAPICollector(**cols["fuel_app"]))
         if cols["gov_data"]["data_gov_url"]:
-            self._collectors.append(GovDataScraper(**cols["gov_data"]))
+            self._collectors.append(GovCollector(**cols["gov_data"]))
 
         if not self._collectors:
             logger.warning("no collectors configured - set WAZE_API_URL / FUEL_APP_API_URL / GOV_DATA_URL")
