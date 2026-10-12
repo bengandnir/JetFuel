@@ -8,3 +8,23 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Security / Secrets (CRITICAL)
+.env
+
+# Python / uv Virtual Environment
+.venv/
+.env/
+
+# Python Cache
+
+# IDE / Editor Settings
+.vscode/
+
+# Logs and exported data
+*.log
+exported_data.json
+
+# Ignore all JSON data files EXCEPT config.json
+*.json
+!config.json

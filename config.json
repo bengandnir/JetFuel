@@ -1,0 +1,26 @@
+{
+    "interval_minutes": 5,
+    "splunk": {
+        "hec_url": "http://localhost:8088/services/collector/event",
+        "hec_token": "11111111-2222-3333-4444-555555555555",
+        "index": "main",
+        "batch_size": 100,
+        "verify_ssl": false
+    },
+    "collectors": {
+        "waze": {
+            "api_url": "https://www.waze.com/il-SearchServer/mozi",
+            "center_lat": 32.0853,
+            "center_lon": 34.7818,
+            "radius_km": 10.0
+        },
+        "fuel_app": {
+            "api_url": "",
+            "device_id": "",
+            "auth_token": ""
+        },
+        "gov_data": {
+            "data_gov_url": ""
+        }
+    }
+}

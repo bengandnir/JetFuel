@@ -19,26 +19,14 @@ from collectors.wazecollector import WazeCollector
 from models import FuelStationData
 from processing import DataNormalizer
 from splunk_client import SplunkHECClient
+from utils import load_config
 
 logger = logging.getLogger("fuel_worker")
 
-DEFAULT_CONFIG: Dict[str, Any] = {
-    "interval_minutes": 5,
-    "splunk": {
-        "hec_url": "https://splunk:8088/services/collector/event",
-        "hec_token": "11111111-2222-3333-4444-555555555555",
-        "index": "main",
-        "batch_size": 100,
-        "verify_ssl": False,
-    },
-    "collectors": {
-        # A collector is only started when its URL is set.
-        "waze": {"api_url": "", "center_lat": 32.0853, "center_lon": 34.7818, "radius_km": 10.0},
-        "fuel_app": {"api_url": "", "device_id": "", "auth_token": ""},
-        "gov_data": {"data_gov_url": ""},
-    },
-}
 
+
+# טעינת הקונפיגורציה
+DEFAULT_CONFIG = load_config()
 
 def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
     out = dict(base)

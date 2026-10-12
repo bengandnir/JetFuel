@@ -3,12 +3,13 @@ services:
     image: splunk/splunk:latest
     container_name: splunk-enterprise
     environment:
-      SPLUNK_START_ARGS: "--accept-license"
-      SPLUNK_GENERAL_TERMS: "--accept-sgt-current-at-splunk-com"
-      SPLUNK_PASSWORD: "${SPLUNK_PASSWORD:-ChangeMe123!}"
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_GENERAL_TERMS: --accept-sgt-current-at-splunk-com
+      #SPLUNK_USER: ${SPLUNK_ADMIN_USER}
+      SPLUNK_PASSWORD: ${SPLUNK_ADMIN_PASSWORD}
+      SPLUNK_HEC_TOKEN: ${SPLUNK_HEC_TOKEN}
       # The Splunk docker image enables HEC (port 8088, HTTPS) and creates a
       # token with this value on first start.
-      SPLUNK_HEC_TOKEN: "${SPLUNK_HEC_TOKEN:-11111111-2222-3333-4444-555555555555}"
     ports:
       - "8000:8000"   # Splunk Web (dashboards)
       - "8088:8088"   # HEC (exposed for debugging; worker uses the internal network)

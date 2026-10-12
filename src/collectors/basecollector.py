@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
+import cloudscraper
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -93,7 +94,13 @@ class BaseCollector(ABC):
             status_forcelist=(429, 500, 502, 503, 504),
             allowed_methods=frozenset({"GET", "POST"}),
         )
-        session = requests.Session()
+        session = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            }
+        )
         adapter = HTTPAdapter(max_retries=retry)
         session.mount("https://", adapter)
         session.mount("http://", adapter)

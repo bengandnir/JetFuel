@@ -73,35 +73,61 @@ class WazeCollector(BaseCollector):
         )
 
     def fetch_raw_data(self) -> Dict[str, Any]:
-        # TODO(inject): replace params/headers with your reverse-engineered request.
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://www.waze.com/live-map/",
+            "Accept": "application/json, text/plain, */*"
+        }
         params = {
+            "q": "תחנת דלק",
             "latMin": self._box_lat_min,
             "lonMin": self._box_lon_min,
             "latMax": self._box_lat_max,
             "lonMax": self._box_lon_max,
         }
-        response = self._session.get(self._api_url, params=params, timeout=self._timeout)
+        response = self._session.get(self._api_url, params=params, headers=headers, timeout=self._timeout)
         response.raise_for_status()
         return response.json()
 
     def parse_data(self, raw_data: Dict[str, Any]) -> List[FuelStationData]:
         stations: List[FuelStationData] = []
-        # TODO(inject): adapt the key names below to the real response schema.
-        for item in raw_data.get("stations", []):
+        # ה-API של Waze מחזיר את התוצאות תחת 'places' או 'results'
+        places = raw_data.get("places", raw_data.get("results", []))
+        
+        for item in places:
             try:
+                price_95 = None
+                price_diesel = None
+                
+                # סריקת מערך המחירים ש-Waze מספקת
+                for p in item.get("gasPrices", []):
+                    if p.get("fuelType") == "95":
+                        price_95 = self._to_float(p.get("price"))
+                    elif p.get("fuelType") in ["Diesel", "diesel", "סולר"]:
+                        price_diesel = self._to_float(p.get("price"))
+                
+                # חילוץ קואורדינטות מתוך האובייקט הפנימי או החיצוני
+                location = item.get("location", {})
+                lat = self._to_float(location.get("lat")) or self._to_float(item.get("lat"))
+                lon = self._to_float(location.get("lon")) or self._to_float(item.get("lon"))
+
+                # סינון תחנות ללא מזהה או קואורדינטות תקינות
+                if not item.get("id") or lat is None or lon is None:
+                    continue
+
                 stations.append(
                     FuelStationData(
-                        station_id=f"waze:{item['id']}",
+                        station_id=f"waze:{item.get('id')}",
                         name=str(item.get("name", "")),
                         brand=str(item.get("brand", "")),
-                        price_95=self._to_float(item.get("price95")),
-                        price_diesel=self._to_float(item.get("priceDiesel")),
-                        lat=self._to_float(item.get("lat")),
-                        lon=self._to_float(item.get("lon")),
+                        price_95=price_95,
+                        price_diesel=price_diesel,
+                        lat=lat,
+                        lon=lon,
                         timestamp=datetime.now(timezone.utc),
                     )
                 )
-            except KeyError as exc:
-                logger.warning("[waze] skipping malformed item (missing %s)", exc)
+            except Exception as exc:
+                logger.warning("[waze] דילוג על תחנה עקב שגיאת מפענח: %s", exc)
+                
         return stations
-
